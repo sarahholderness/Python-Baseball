@@ -3,7 +3,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from .frames import games, info, events
+from frames import games, info, events
 
 # LO: Pandas selection (rows by value `query`)
 plays = games.query("type == 'play' & event != 'NP'")

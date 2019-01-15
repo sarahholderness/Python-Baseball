@@ -37,3 +37,5 @@ games = games.fillna(' ')
 
 # LO: Pandas enum
 games.loc[:, 'type'] = pd.Categorical(games.loc[:, 'type'])
+
+print(games.head())

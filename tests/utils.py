@@ -4,69 +4,89 @@ import json
 import os
 import collections
 
+def convert_ast(node, return_type='string', include_type=False, sep=':'):
+    count = 1
+    def _flatten_dict(d, parent_key='', sep=':'):
+        items = []
+        for k, v in d.items():
+            new_key = parent_key + sep + k if parent_key else k
+            if isinstance(v, collections.MutableMapping):
+                items.extend(_flatten_dict(v, new_key, sep=sep).items())
+            else:
+                items.append((new_key, v))
+        return dict(items)
 
-def flatten(d, parent_key='', sep='_'):
-    items = []
-    for k, v in d.items():
-        new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.MutableMapping):
-            items.extend(flatten(v, new_key, sep=sep).items())
-        else:
-            items.append((new_key, v))
-    return dict(items)
+    def _flatten_list(lst):
+        return sum(([x] if not isinstance(x, list) else _flatten_list(x) for x in lst), [])
 
-def get_functions(source):
-    functions = []
+    def _format(node):
+        nonlocal count
+        if isinstance(node, ast.AST):
+            d = _flatten_dict({ key: _format(value) for key, value in ast.iter_fields(node) if key != 'ctx'})
+
+            if include_type:
+                d['type'] = node.__class__.__name__
+
+            return d
+
+        elif isinstance(node, list):
+            return sep.join(_flatten_list([value for list_node in node for value in _format(list_node).values() if value]))
+
+        return str(node)
+
+    if not isinstance(node, ast.AST):
+        raise TypeError('expected AST, got %r' % node.__class__.__name__)
+
+    if return_type == 'string':
+        return sep.join([value for value in _format(node).values() if value])
+
+    elif return_type == 'list':
+        return list(_format(node).values())
+    else:
+        return _format(node)
+
+def get_calls(source, return_type='string', include_type=False):
+    calls = []
 
     def visit_Call(node):
-        path = node.func.attr if isinstance(node.func, ast.Attribute) else node.func.id
-        if len(node.args) != 0:
-            path += ':' + ':'.join([str(val) for arg in node.args for val in build_dict(arg).values()])
-
-        if len(node.keywords) != 0:
-            path += ':' + ':'.join([str(val) for keyword in node.keywords for val in build_dict(keyword).values()])
-
-        functions.append(path)
+        calls.append(convert_ast(node, return_type, include_type))
 
     node_iter = ast.NodeVisitor()
     node_iter.visit_Call = visit_Call
-    node_iter.visit(ast.parse(inspect.getsource(source)))
-    return functions
+    try:
+        node_iter.visit(ast.parse(inspect.getsource(source)))
+    except OSError:
+        return []
 
-def get_functions_returns(source):
-    returns = []
+    return calls
 
-    def visit_Return(node):
-        returns.append(build_dict(node))
+def get_assignments(source, return_type='string', include_type=False):
+    assignments = []
 
-    node_iter = ast.NodeVisitor()
-    node_iter.visit_Return = visit_Return
-    node_iter.visit(ast.parse(inspect.getsource(source)))
-    return returns
-
-def get_statements(source):
-    statements = []
-
-    def visit_If(node):
-        statements.append(build_dict(node))
+    def visit_Assign(node):
+        assignments.append(convert_ast(node, return_type, include_type))
 
     node_iter = ast.NodeVisitor()
-    node_iter.visit_If = visit_If
-    node_iter.visit(ast.parse(inspect.getsource(source)))
-    return statements
+    node_iter.visit_Assign = visit_Assign
 
-def build_dict(node):
-    result = {}
-    if node.__class__.__name__ == 'Is' or node.__class__.__name__ == 'Eq':
-        result['node_type'] = node.__class__.__name__
-    for attr in dir(node):
-        if not attr.startswith("_") and attr != 'ctx' and attr != 'lineno' and attr != 'col_offset':
-            value = getattr(node, attr)
-            if isinstance(value, ast.AST):
-                value = build_dict(value)
-            elif isinstance(value, list):
-                final = [build_dict(n) for n in value]
-                value = final[0] if len(final) == 1 else final
-            if value != []:
-                result[attr] = value
-    return flatten(result, sep='/')
+    try:
+        node_iter.visit(ast.parse(inspect.getsource(source)))
+    except OSError:
+        return []
+
+    return assignments
+
+def get_for_loops(source, return_type='string', include_type=False):
+    loops = []
+
+    def visit_For(node):
+        loops.append(convert_ast(node, return_type, include_type))
+
+    node_iter = ast.NodeVisitor()
+    node_iter.visit_For = visit_For
+    try:
+        node_iter.visit(ast.parse(inspect.getsource(source)))
+    except OSError:
+        return []
+
+    return loops

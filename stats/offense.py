@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from .data import games
+from data import games
 
 # LO: Pandas selection (columns by label)
 plays = games[games['type'] == 'play']

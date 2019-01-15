@@ -1,80 +1,73 @@
 import pytest
-import matplotlib
-matplotlib.use('Agg')
 
 from .utils import *
+
 from stats import data
 
 @pytest.mark.test_import_builtin_libraries_module1
 def test_import_builtin_libraries_module1():
     assert 'os' in dir(data), 'Have you imported the `os` built-in library?'
-    assert 'pd' in dir(data), 'Have you imported `pandas` as `pd`?'
-    assert 'plt' in dir(data), 'Have you imported the `matplotlib.pyplot` as `plt`?'
-
-@pytest.mark.test_import_builtin_libraries_module1
-def test_import_builtin_libraries_module1():
-    pass
+    assert 'glob' in dir(data), 'Have you imported the `os` built-in library?'
 
 @pytest.mark.test_import_pandas_module1
 def test_import_pandas_module1():
-    pass
+    assert 'pd' in dir(data), 'Have you imported `pandas` as `pd`?'
 
 @pytest.mark.test_python_file_management_module1
 def test_python_file_management_module1():
-    pass
-
-@pytest.mark.test_glob_function_arguments_module1
-def test_glob_function_arguments_module1():
-    pass
+    assert 'game_files:glob:glob:os:path:join:os:getcwd:games:*.EVE' in get_assignments(data), 'Do you have a `glob.glob()` function call with the correct arguments?'
 
 @pytest.mark.test_sorting_file_names_module1
 def test_sorting_file_names_module1():
-    pass
+    assert 'game_files:sort' in get_calls(data), 'Are you sorting the `game_files` in-place with sort()?'
 
 @pytest.mark.test_read_csvs_module1
 def test_read_csvs_module1():
-    pass
+    assert len(get_for_loops(data, 'dict')) != 0, 'Do you have a for loop that loops through the `game_files`?'
+    assert get_for_loops(data, 'dict')[0]['target:id'] == 'game_file' and get_for_loops(data, 'dict')[0]['iter:id'] == 'game_files', 'Do you have a for loop that loops through the `game_files`?'
+    assert get_for_loops(data, 'dict')[0]['body'].startswith('game_frame:pd:read_csv:game_file'), 'Do you have a for loop that loops through the `game_files`?'
 
 @pytest.mark.test_read_csv_arguments_module1
 def test_read_csv_arguments_module1():
-    pass
+    assert len(get_for_loops(data, 'dict')) != 0, 'Do you have a for loop that loops through the `game_files`?'
+    assert get_for_loops(data, 'dict')[0]['body'] == 'game_frame:pd:read_csv:game_file:names:type:multi2:multi3:multi4:multi5:multi6:event:game_frames:append:game_frame', 'Do you have a for loop that loops through the `game_files`?'
 
 @pytest.mark.test_append_event_frames_module1
 def test_append_event_frames_module1():
-    pass
+    assert 'game_frames:append:game_frame' in get_calls(data), 'Are you appending the current `game_frame` to `game_frames`?'
 
 @pytest.mark.test_concatenate_dataframes_module1
 def test_concatenate_dataframes_module1():
-    pass
+    assert 'games:pd:concat:game_frames' in get_assignments(data), 'The `pd.concat()` function should be passed the argument `game_frames` and assigned to `games`.'
 
 @pytest.mark.test_clean_values_module1
 def test_clean_values_module1():
-    pass
+    assert 'games:loc:games:multi5:??:multi5' in get_assignments(data), 'Are you replacing the value `??` with an empty string?'
 
 @pytest.mark.test_extract_identifiers_module1
 def test_extract_identifiers_module1():
-    pass
+    assert 'identifiers:games:multi2:str:extract:(.LS(\\d{4})\\d{5})' in get_assignments(data), 'Have the `year` and `game_id` been extracted?'
 
 @pytest.mark.test_forward_fill_identifiers_module1
 def test_forward_fill_identifiers_module1():
-    pass
+    assert 'identifiers:identifiers:fillna:method:ffill' in get_assignments(data), 'Have the `game_id` and `year` columns been filled with the correct values?'
 
 @pytest.mark.test_rename_columns_module1
 def test_rename_columns_module1():
-    pass
+    assert 'identifiers:columns:game_id:year' in get_assignments(data), 'The column labels of the `identifiers` DataFrame should be `game_id` and `year`.'
 
 @pytest.mark.test_concatenate_identifier_columns_module1
 def test_concatenate_identifier_columns_module1():
-    pass
+    assert 'games:pd:concat:games:identifiers:axis:1:sort:False' in get_assignments(data), 'Concatenate the `games` and `identifiers` DataFrames.'
 
 @pytest.mark.test_fill_nan_values_module1
 def test_fill_nan_values_module1():
-    pass
+    assert 'games:games:fillna: ' in get_assignments(data), 'The NaN values in the `identifiers` DataFrames have not been fill with a space'
 
 @pytest.mark.test_categorical_event_type_module1
 def test_categorical_event_type_module1():
-    pass
+    assert 'games:loc:None:None:None:type:pd:Categorical:games:loc:None:None:None:type' in get_assignments(data), 'Save some memory by making the type column Categorical.'
 
 @pytest.mark.test_print_dataframe_module1
 def test_print_dataframe_module1():
-    pass
+    assert 'print:games:head' in get_calls(data), 'To check the `games` DataFrame print the first five rows.'

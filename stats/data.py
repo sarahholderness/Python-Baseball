@@ -18,3 +18,7 @@ identifiers = games['multi2'].str.extract(r'(.LS(\d{4})\d{5})')
 identifiers = identifiers.fillna(method='ffill')
 identifiers.columns = ['game_id', 'year']
 games = pd.concat([games, identifiers], axis=1, sort=False)
+games = games.fillna(' ')
+games.loc[:, 'type'] = pd.Categorical(games.loc[:, 'type'])
+
+print(games.head())
